@@ -74,7 +74,7 @@ function draw(now) {
   for (let y = 0; y <= ROWS; y++) { ctx.moveTo(0, y * S + .5); ctx.lineTo(canvas.width, y * S + .5); }
   ctx.stroke();
 
-  // Animation : les naissances grossissent et passent du rouge à l'encre
+  // Animation : les naissances apparaissent en grossissant
   const t = Math.min(1, (now - stepAt) / 250);
   let pop = 0;
   for (let y = 0; y < ROWS; y++) {
@@ -85,7 +85,7 @@ function draw(now) {
       const born = a === 1;
       const k = born ? 0.4 + 0.6 * t : 1;
       const m = (S - 2) * k;
-      ctx.fillStyle = born ? ROUGE : ENCRE;
+      ctx.fillStyle = ENCRE;
       ctx.globalAlpha = born ? 0.5 + 0.5 * t : 1;
       ctx.fillRect(x * S + (S - m) / 2, y * S + (S - m) / 2, m, m);
     }

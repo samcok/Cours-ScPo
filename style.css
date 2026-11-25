@@ -106,10 +106,6 @@ h2:not(:first-child) { margin-top: 24px; }
 .pattern-actions button { flex: 1; padding: 6px 8px; font-size: 0.8rem; }
 
 .rules { margin: 0; padding-left: 18px; font-size: 0.85rem; line-height: 1.5; }
-.legend { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; font-size: 0.8rem; color: var(--gris); }
-.dot { width: 10px; height: 10px; display: inline-block; }
-.dot.new { background: var(--rouge); }
-.dot.old { background: var(--encre); margin-left: 8px; }
 
 @media (max-width: 860px) {
   main { grid-template-columns: 1fr; }
