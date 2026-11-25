@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fourmi de Langton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav class="tabs" aria-label="Simulations">
+      <a href="index.html" >Jeu de la vie</a>
+      <a href="langton.html" aria-current="page">Fourmi de Langton</a>
+    </nav>
+    <h1>Fourmi de Langton</h1>
+    <p>Une fourmi suit deux règles sur une grille. Après environ 10 000 étapes, le chaos fait place à une autoroute qui se répète sans fin.</p>
+  </header>
+
+  <main>
+    <section class="board">
+      <div class="toolbar">
+        <button id="play" class="primary">Lecture</button>
+        <button id="back" disabled>← Étape</button>
+        <button id="step">Étape →</button>
+        <button id="random">Aléatoire</button>
+        <button id="clear">Effacer</button>
+        <label class="speed">Vitesse
+          <input id="speed" type="range" min="1" max="100" value="30">
+        </label>
+      </div>
+      <div class="size">
+        <label>Largeur <input id="w-range" type="range" min="1" max="300" value="120"><input id="w-num" type="number" min="1" max="300" value="120"></label>
+        <label>Hauteur <input id="h-range" type="range" min="1" max="300" value="80"><input id="h-num" type="number" min="1" max="300" value="80"></label>
+      </div>
+      <canvas id="canvas" aria-label="Grille de la fourmi de Langton : cliquez pour dessiner des cases noires ou placer la fourmi"></canvas>
+      <p class="stats">Étape <strong id="gen">0</strong> · Cases noires <strong id="pop">0</strong></p>
+    </section>
+
+    <aside>
+      <h2>Départ</h2>
+      <p class="hint">Dessinez des cases noires ou placez la fourmi (triangle rouge) et choisissez son orientation.</p>
+      <div class="pattern-actions">
+        <button id="tool-draw" class="tool selected">Crayon</button>
+        <button id="tool-ant" class="tool">Fourmi</button>
+        <button id="turn">Orienter ↻</button>
+      </div>
+
+      <h2>Règles</h2>
+      <ul class="rules">
+        <li>Sur une case blanche, la fourmi tourne à droite.</li>
+        <li>Sur une case noire, elle tourne à gauche.</li>
+        <li>Elle inverse la couleur de la case, puis avance d'une case.</li>
+        <li>Au bord de la grille, elle s'arrête.</li>
+      </ul>
+    </aside>
+  </main>
+
+  <script src="langton.js"></script>
+</body>
+</html>

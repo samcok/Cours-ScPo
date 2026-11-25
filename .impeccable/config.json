@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "montserrat",
+        "createdAt": "2026-11-25T17:07:32.737Z",
+        "reason": "User asked for the Sciences Po typography; Montserrat is the font loaded by sciencespo.fr (found in its CSS)"
+      }
+    ]
+  }
+}
