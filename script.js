@@ -47,7 +47,18 @@ let painting = null; // état peint pendant un glisser (1 ou 0)
 const $ = (id) => document.getElementById(id);
 const idx = (x, y) => ((y + ROWS) % ROWS) * COLS + ((x + COLS) % COLS); // bords qui se rejoignent
 
+const history = []; // grilles précédentes, 500 au plus
+function back() {
+  if (!history.length) return;
+  [grid, gen] = history.pop();
+  stepAt = performance.now();
+  $('back').disabled = !history.length;
+}
+
 function step() {
+  history.push([grid, gen]);
+  if (history.length > 500) history.shift();
+  $('back').disabled = false;
   const next = new Uint8Array(grid.length);
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
@@ -172,8 +183,10 @@ canvas.addEventListener('pointerleave', () => hover = null);
 // ---- Boutons ----
 $('play').onclick = () => { running = !running; $('play').textContent = running ? 'Pause' : 'Lecture'; };
 $('step').onclick = step;
-$('clear').onclick = () => { grid.fill(0); gen = 0; };
-$('random').onclick = () => { grid = grid.map(() => Math.random() < 0.25 ? 1 : 0); gen = 0; stepAt = performance.now(); };
+$('back').onclick = back;
+function reset(g) { grid = g; gen = 0; history.length = 0; $('back').disabled = true; stepAt = performance.now(); }
+$('clear').onclick = () => reset(new Uint8Array(COLS * ROWS));
+$('random').onclick = () => reset(grid.map(() => Math.random() < 0.25 ? 1 : 0));
 
 // Départ : un planeur et un canon pour que la page ne soit pas vide
 cellsOf(PATTERNS['Vaisseaux']['Planeur'], 0).forEach(([x, y]) => grid[idx(x + 5, y + 5)] = 1);
