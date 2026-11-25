@@ -1,4 +1,4 @@
-const COLS = 60, ROWS = 40, S = 16; // S = taille d'une cellule en pixels
+let COLS = 100, ROWS = 60, S = 16; // S = taille d'une cellule en pixels (canvas interne)
 const ROUGE = '#E6142D', ENCRE = '#212121', TRAIT = '#E1E1E3';
 
 // Motifs : # = cellule vivante
@@ -6,10 +6,16 @@ const PATTERNS = {
   'Vies stables': {
     'Bloc': ['##', '##'],
     'Ruche': ['.##.', '#..#', '.##.'],
+    'Bateau': ['##.', '#.#', '.#.'],
+    'Pain': ['.##.', '#..#', '.#.#', '..#.'],
+    'Étang': ['.##.', '#..#', '#..#', '.##.'],
+    'Navire': ['##.', '#.#', '.##'],
   },
   'Oscillateurs': {
     'Clignotant': ['###'],
     'Crapaud': ['.###', '###.'],
+    'Balise': ['##..', '##..', '..##', '..##'],
+    'Pentadécathlon': ['..#....#..', '##.####.##', '..#....#..'],
     'Pulsar': [
       '..###...###..', '.............', '#....#.#....#', '#....#.#....#', '#....#.#....#',
       '..###...###..', '.............', '..###...###..', '#....#.#....#', '#....#.#....#',
@@ -18,9 +24,13 @@ const PATTERNS = {
   'Vaisseaux': {
     'Planeur': ['.#.', '..#', '###'],
     'Vaisseau léger': ['#..#.', '....#', '#...#', '.####'],
+    'Vaisseau moyen': ['...#..', '.#...#', '#.....', '#....#', '#####.'],
+    'Vaisseau lourd': ['...##..', '.#....#', '#......', '#.....#', '######.'],
   },
   'Chaos et canons': {
     'Pentomino R': ['.##', '##.', '.#.'],
+    'Diehard': ['......#.', '##......', '.#...###'],
+    'Gland': ['.#.....', '...#...', '##..###'],
     'Canon de Gosper': [
       '........................#...........',
       '......................#.#...........',
@@ -36,8 +46,6 @@ const PATTERNS = {
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-canvas.width = COLS * S;
-canvas.height = ROWS * S;
 
 let grid = new Uint8Array(COLS * ROWS); // 0 = morte, sinon âge (1 = naissance)
 let running = false, gen = 0, lastStep = 0;
@@ -45,7 +53,8 @@ let pattern = null, hover = null; // pattern = tableau de [dx, dy]
 let painting = null; // état peint pendant un glisser (1 ou 0)
 
 const $ = (id) => document.getElementById(id);
-const idx = (x, y) => ((y + ROWS) % ROWS) * COLS + ((x + COLS) % COLS); // bords qui se rejoignent
+const inside = (x, y) => x >= 0 && x < COLS && y >= 0 && y < ROWS; // hors grille = cellule morte
+const idx = (x, y) => y * COLS + x;
 
 const history = []; // grilles précédentes, 500 au plus
 function back() {
@@ -64,7 +73,7 @@ function step() {
       let n = 0;
       for (let dy = -1; dy <= 1; dy++)
         for (let dx = -1; dx <= 1; dx++)
-          if (dx || dy) n += grid[idx(x + dx, y + dy)] ? 1 : 0;
+          if ((dx || dy) && inside(x + dx, y + dy) && grid[idx(x + dx, y + dy)]) n++;
       const a = grid[y * COLS + x];
       next[y * COLS + x] = a ? (n === 2 || n === 3 ? Math.min(a + 1, 255) : 0) : (n === 3 ? 1 : 0);
     }
@@ -87,10 +96,10 @@ function draw() {
   ctx.fillStyle = ENCRE;
   for (let y = 0; y < ROWS; y++)
     for (let x = 0; x < COLS; x++)
-      if (grid[y * COLS + x]) { pop++; ctx.fillRect(x * S + 1, y * S + 1, S - 2, S - 2); }
+      if (grid[y * COLS + x]) { pop++; ctx.fillRect(x * S + 1, y * S + 1, S - 1, S - 1); }
   ctx.globalAlpha = 0.35;
   ctx.fillStyle = ROUGE;
-  if (pattern && hover) for (const [dx, dy] of pattern) ctx.fillRect(((hover.x + dx + COLS) % COLS) * S + 1, ((hover.y + dy + ROWS) % ROWS) * S + 1, S - 2, S - 2);
+  if (pattern && hover) for (const [dx, dy] of pattern) if (inside(hover.x + dx, hover.y + dy)) ctx.fillRect((hover.x + dx) * S + 1, (hover.y + dy) * S + 1, S - 1, S - 1);
   ctx.globalAlpha = 1;
   $('gen').textContent = gen;
   $('pop').textContent = pop;
@@ -155,25 +164,52 @@ function cellAt(e) {
 }
 canvas.addEventListener('pointerdown', (e) => {
   const c = cellAt(e);
-  if (pattern) { pattern.forEach(([dx, dy]) => grid[idx(c.x + dx, c.y + dy)] = grid[idx(c.x + dx, c.y + dy)] || 1); return; }
+  if (pattern) { pattern.forEach(([dx, dy]) => inside(c.x + dx, c.y + dy) && (grid[idx(c.x + dx, c.y + dy)] ||= 1)); return; }
+  if (!inside(c.x, c.y)) return;
   painting = grid[idx(c.x, c.y)] ? 0 : 1;
   grid[idx(c.x, c.y)] = painting;
   canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener('pointermove', (e) => {
   hover = cellAt(e);
-  if (painting !== null) grid[idx(hover.x, hover.y)] = painting;
+  if (painting !== null && inside(hover.x, hover.y)) grid[idx(hover.x, hover.y)] = painting;
 });
 canvas.addEventListener('pointerup', () => painting = null);
 canvas.addEventListener('pointerleave', () => hover = null);
 
 // ---- Boutons ----
-$('play').onclick = () => { running = !running; $('play').textContent = running ? 'Pause' : 'Lecture'; };
+function setRunning(on) { running = on; $('play').textContent = on ? 'Pause' : 'Lecture'; }
+$('play').onclick = () => setRunning(!running);
 $('step').onclick = step;
 $('back').onclick = back;
 function reset(g) { grid = g; gen = 0; history.length = 0; $('back').disabled = true; }
-$('clear').onclick = () => reset(new Uint8Array(COLS * ROWS));
+$('clear').onclick = () => { setRunning(false); reset(new Uint8Array(COLS * ROWS)); };
 $('random').onclick = () => reset(grid.map(() => Math.random() < 0.25 ? 1 : 0));
+
+// ---- Taille de la grille ----
+function resize(cols, rows) {
+  const old = grid, oc = COLS;
+  const next = new Uint8Array(cols * rows);
+  for (let y = 0; y < Math.min(rows, ROWS); y++)
+    for (let x = 0; x < Math.min(cols, COLS); x++) next[y * cols + x] = old[y * oc + x];
+  COLS = cols; ROWS = rows; grid = next;
+  history.length = 0; $('back').disabled = true; // les anciennes grilles n'ont plus la bonne taille
+  S = Math.max(5, Math.min(16, Math.floor(1600 / COLS)));
+  canvas.width = COLS * S; canvas.height = ROWS * S;
+}
+for (const k of ['w', 'h']) {
+  const range = $(k + '-range'), num = $(k + '-num');
+  const apply = (v) => {
+    v = Math.min(200, Math.max(10, Math.round(+v)));
+    if (!v) return;
+    range.value = v;
+    k === 'w' ? resize(v, ROWS) : resize(COLS, v);
+  };
+  range.oninput = () => { num.value = range.value; apply(range.value); };
+  num.oninput = () => num.value !== '' && apply(num.value);
+  num.onchange = () => { apply(num.value); num.value = range.value; };
+}
+resize(COLS, ROWS);
 
 // Départ : un planeur et un canon pour que la page ne soit pas vide
 cellsOf(PATTERNS['Vaisseaux']['Planeur'], 0).forEach(([x, y]) => grid[idx(x + 5, y + 5)] = 1);

@@ -27,6 +27,10 @@
           <input id="speed" type="range" min="1" max="30" value="10">
         </label>
       </div>
+      <div class="size">
+        <label>Largeur <input id="w-range" type="range" min="10" max="200" value="100"><input id="w-num" type="number" min="10" max="200" value="100"></label>
+        <label>Hauteur <input id="h-range" type="range" min="10" max="200" value="60"><input id="h-num" type="number" min="10" max="200" value="60"></label>
+      </div>
       <canvas id="canvas" aria-label="Grille du jeu de la vie : cliquez pour dessiner des cellules"></canvas>
       <p class="stats">Génération <strong id="gen">0</strong> · Population <strong id="pop">0</strong></p>
     </section>
