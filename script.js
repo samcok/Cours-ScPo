@@ -40,7 +40,7 @@ canvas.width = COLS * S;
 canvas.height = ROWS * S;
 
 let grid = new Uint8Array(COLS * ROWS); // 0 = morte, sinon âge (1 = naissance)
-let running = false, gen = 0, lastStep = 0, stepAt = 0;
+let running = false, gen = 0, lastStep = 0;
 let pattern = null, hover = null; // pattern = tableau de [dx, dy]
 let painting = null; // état peint pendant un glisser (1 ou 0)
 
@@ -51,7 +51,6 @@ const history = []; // grilles précédentes, 500 au plus
 function back() {
   if (!history.length) return;
   [grid, gen] = history.pop();
-  stepAt = performance.now();
   $('back').disabled = !history.length;
 }
 
@@ -72,10 +71,9 @@ function step() {
   }
   grid = next;
   gen++;
-  stepAt = performance.now();
 }
 
-function draw(now) {
+function draw() {
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = TRAIT;
@@ -85,22 +83,11 @@ function draw(now) {
   for (let y = 0; y <= ROWS; y++) { ctx.moveTo(0, y * S + .5); ctx.lineTo(canvas.width, y * S + .5); }
   ctx.stroke();
 
-  // Animation : les naissances apparaissent en grossissant
-  const t = Math.min(1, (now - stepAt) / 250);
   let pop = 0;
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      const a = grid[y * COLS + x];
-      if (!a) continue;
-      pop++;
-      const born = a === 1;
-      const k = born ? 0.4 + 0.6 * t : 1;
-      const m = (S - 2) * k;
-      ctx.fillStyle = ENCRE;
-      ctx.globalAlpha = born ? 0.5 + 0.5 * t : 1;
-      ctx.fillRect(x * S + (S - m) / 2, y * S + (S - m) / 2, m, m);
-    }
-  }
+  ctx.fillStyle = ENCRE;
+  for (let y = 0; y < ROWS; y++)
+    for (let x = 0; x < COLS; x++)
+      if (grid[y * COLS + x]) { pop++; ctx.fillRect(x * S + 1, y * S + 1, S - 2, S - 2); }
   ctx.globalAlpha = 0.35;
   ctx.fillStyle = ROUGE;
   if (pattern && hover) for (const [dx, dy] of pattern) ctx.fillRect(((hover.x + dx + COLS) % COLS) * S + 1, ((hover.y + dy + ROWS) % ROWS) * S + 1, S - 2, S - 2);
@@ -112,7 +99,7 @@ function draw(now) {
 function loop(now) {
   const delay = 1000 / +$('speed').value;
   if (running && now - lastStep >= delay) { step(); lastStep = now; }
-  draw(now);
+  draw();
   requestAnimationFrame(loop);
 }
 
@@ -168,7 +155,7 @@ function cellAt(e) {
 }
 canvas.addEventListener('pointerdown', (e) => {
   const c = cellAt(e);
-  if (pattern) { pattern.forEach(([dx, dy]) => grid[idx(c.x + dx, c.y + dy)] = grid[idx(c.x + dx, c.y + dy)] || 1); stepAt = performance.now(); return; }
+  if (pattern) { pattern.forEach(([dx, dy]) => grid[idx(c.x + dx, c.y + dy)] = grid[idx(c.x + dx, c.y + dy)] || 1); return; }
   painting = grid[idx(c.x, c.y)] ? 0 : 1;
   grid[idx(c.x, c.y)] = painting;
   canvas.setPointerCapture(e.pointerId);
@@ -184,7 +171,7 @@ canvas.addEventListener('pointerleave', () => hover = null);
 $('play').onclick = () => { running = !running; $('play').textContent = running ? 'Pause' : 'Lecture'; };
 $('step').onclick = step;
 $('back').onclick = back;
-function reset(g) { grid = g; gen = 0; history.length = 0; $('back').disabled = true; stepAt = performance.now(); }
+function reset(g) { grid = g; gen = 0; history.length = 0; $('back').disabled = true; }
 $('clear').onclick = () => reset(new Uint8Array(COLS * ROWS));
 $('random').onclick = () => reset(grid.map(() => Math.random() < 0.25 ? 1 : 0));
 
