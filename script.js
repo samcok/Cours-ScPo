@@ -200,7 +200,7 @@ function resize(cols, rows) {
 for (const k of ['w', 'h']) {
   const range = $(k + '-range'), num = $(k + '-num');
   const apply = (v) => {
-    v = Math.min(200, Math.max(10, Math.round(+v)));
+    v = Math.min(200, Math.max(1, Math.round(+v)));
     if (!v) return;
     range.value = v;
     k === 'w' ? resize(v, ROWS) : resize(COLS, v);
